@@ -31,32 +31,36 @@ average Mauna Loa Observatory CO2 measurements from January 1959 to December
 directly, and then after a couple of manipulations, we'll have a single
 Series object with one observation per month.
 
-    st = pd.Timestamp(year=1959, month=1, day=1)
-    en = pd.Timestamp(year=1986, month=12, day=31)
+```python
+st = pd.Timestamp(year=1959, month=1, day=1)
+en = pd.Timestamp(year=1986, month=12, day=31)
 
-    co2_month = (pd
+co2_month = (pd
 
-        #Read in the data:
-        .read_csv('co2_mm_mlo.csv', 
-                  skiprows=41, 
-                  names=['year','month','decimal date','co2','deseasonalized',
-                         'ndays','sdev','unc'],
-                  usecols=['year', 'month', 'co2'])
+    #Read in the data:
+    .read_csv('co2_mm_mlo.csv', 
+              skiprows=41, 
+              names=['year','month','decimal date','co2','deseasonalized',
+                     'ndays','sdev','unc'],
+              usecols=['year', 'month', 'co2'])
 
-        # Create the DatetimeIndex:
-        .assign(day=1,
-                month=lambda df: pd.to_datetime(df[['year', 'month', 'day']]))
-        .set_index('month')
+    # Create the DatetimeIndex:
+    .assign(day=1,
+            month=lambda df: pd.to_datetime(df[['year', 'month', 'day']]))
+    .set_index('month')
 
-        # Filter for only the data we need:
-        .loc[st:en, 'co2']
-    )
+    # Filter for only the data we need:
+    .loc[st:en, 'co2']
+)
+```
 
 ![Data](/assets/co2.png)
 
 For convenience, let's call our time series **Y**:
 
-    Y = co2_month.rename('observed')
+```python
+Y = co2_month.rename('observed')
+```
 
 Our time series, **Y** is a monthly series with a yearly cycle, which means
 that the length of the cycle is 12 observations. This is an important
@@ -83,13 +87,15 @@ The next step is to smooth each of the cycle-subseries. We do this with a
 Loess regression of order 1. Cleveland et al. call the smoothing parameter
 n<sub>(s)</sub>, and `statsmodels` call it `seasonal`.
 
-    subcycles = (Y
-        .reset_index(drop=True)
-        .groupby(lambda ix: ix % period)
-    )
-    smooth_subcycles = [loess_smoothing(subcycle[1], season, xtra_vals=1)
-                        for subcycle in subcycles]
-    C = pd.concat(smooth_subcycles).sort_index()
+```python
+subcycles = (Y
+    .reset_index(drop=True)
+    .groupby(lambda ix: ix % period)
+)
+smooth_subcycles = [loess_smoothing(subcycle[1], season, xtra_vals=1)
+                    for subcycle in subcycles]
+C = pd.concat(smooth_subcycles).sort_index()
+```
 
 After smoothing, the plot above looks like this:
 
@@ -115,15 +121,17 @@ Next, we are going to smooth the **C** series to create a new series called
 4. A Loess smoothing with smoothing parameter n<sub>(l)</sub> (`*low_pass*`
    in `statsmodels`).
 
-    def low_pass_filter(X, n_p, n_l):
-        res = (X
-            .rolling(n_p, center=True).mean()
-            .rolling(n_p, center=True).mean()
-            .rolling(3, center=True).mean()
-            .shift(-1)
-            .dropna()
-        )
-        return loess_smoothing(res, n_l)
+```python
+def low_pass_filter(X, n_p, n_l):
+    res = (X
+        .rolling(n_p, center=True).mean()
+        .rolling(n_p, center=True).mean()
+        .rolling(3, center=True).mean()
+        .shift(-1)
+        .dropna()
+    )
+    return loess_smoothing(res, n_l)
+```
 
 The n<sub>(l)</sub> parameter should be set to the smallest odd integer larger
 than n<sub>(p)</sub>. In our case, this will mean that n<sub>(l)</sub> is 13.
@@ -150,37 +158,41 @@ This completes one run through this decomposition. We can now rinse and
 repeat, using the de-trended series to begin again in step 1. We can put it
 all together like this:
 
-    def inner_loop(Y, T, season, period, low_pass, trend):
-        subcycles = ((Y-T)
-            .reset_index(drop=True)
-            .groupby(lambda ix: ix % period)
-        )
-        C = pd.concat([loess_smoothing(subcycle[1], season, xtra_vals=1)
-                       for subcycle in subcycles]
-        ).sort_index()
-        L = low_pass_filter(C, period, low_pass)
-        S = (C-L).dropna().set_axis(Y.index).rename('seasonal')
-        T = loess_smoothing(Y-S, trend).rename('trend')
-        return T, S
+```python
+def inner_loop(Y, T, season, period, low_pass, trend):
+    subcycles = ((Y-T)
+        .reset_index(drop=True)
+        .groupby(lambda ix: ix % period)
+    )
+    C = pd.concat([loess_smoothing(subcycle[1], season, xtra_vals=1)
+                   for subcycle in subcycles]
+    ).sort_index()
+    L = low_pass_filter(C, period, low_pass)
+    S = (C-L).dropna().set_axis(Y.index).rename('seasonal')
+    T = loess_smoothing(Y-S, trend).rename('trend')
+    return T, S
 
 
-    def stl_decomposition(Y, season, period, low_pass, trend, iter_count):
-        T = pd.Series(0, index=Y.index)
-        for _ in range(iter_count):
-            T, S = inner_loop(Y, T, season, period, low_pass, trend)
+def stl_decomposition(Y, season, period, low_pass, trend, iter_count):
+    T = pd.Series(0, index=Y.index)
+    for _ in range(iter_count):
+        T, S = inner_loop(Y, T, season, period, low_pass, trend)
 
-        return (
-            T, S, (Y-T-S).rename('resid')
-        )
+    return (
+        T, S, (Y-T-S).rename('resid')
+    )
+```
 
 And if we decompose our original series, we get the following picture:
 
-    period=12
-    low_pass=13
-    trend=19
-    inner_iter=5
+```python
+period=12
+low_pass=13
+trend=19
+inner_iter=5
 
-    T, S, R = stl_decomposition(Y, season, period, low_pass, trend, inner_iter)
+T, S, R = stl_decomposition(Y, season, period, low_pass, trend, inner_iter)
+```
 
 ![Decomposition](/assets/decomposition.png)
 
