@@ -1,6 +1,7 @@
 ---
 title: How STL Works
 ---
+
 # Using STL
 
 STL is a classic method to decompose a time series into its consittuent
@@ -51,7 +52,7 @@ Series object with one observation per month.
         .loc[st:en, 'co2']
     )
 
-![Data][_assets/co2.png]
+![Data][/assets/co2.png]
 
 For convenience, let's call our time series **Y**:
 
@@ -74,7 +75,7 @@ Which means that we will split **Y**
 into 12 cycle-subseries. One for January, one for February, and so on. We
 expect each one of the cycle-subseries to be roughly parallel to the trend:
 
-![Cycle-subseries][_assets/co2-subseries.png]
+![Cycle-subseries][/assets/co2-subseries.png]
 
 ### 1. Smoothing the Cycle-Subseries
 
@@ -92,7 +93,7 @@ n<sub>(s)</sub>, and `statsmodels` call it `seasonal`.
 
 After smoothing, the plot above looks like this:
 
-![Smooth Cycle-subseries][_assets/co2-subseries-smooth.png]
+![Smooth Cycle-subseries][/assets/co2-subseries-smooth.png]
 
 Once each cycle-subseries has been smoothed, we combine each them again into
 a single series we'll call **C**. Like many smoothing methods, loess is less
@@ -128,12 +129,12 @@ The n<sub>(l)</sub> parameter should be set to the smallest odd integer larger
 than n<sub>(p)</sub>. In our case, this will mean that n<sub>(l)</sub> is 13.
 Here is how the **C** series looks next to its smoothed counterpart, **L**:
 
-![C and L][_assets/low-pass.png]
+![C and L][/assets/low-pass.png]
 
 Finally, we can set the Seasonal component for this iteration of the loop to
 **S** = **C** - **L**. This finally looks like a detrended seasonal cycle!
 
-![Seasonal][_assets/seasonal.png]
+![Seasonal][/assets/seasonal.png]
 
 
 ### 3. Calculating the Trend
@@ -181,7 +182,7 @@ And if we decompose our original series, we get the following picture:
 
     T, S, R = stl_decomposition(Y, season, period, low_pass, trend, inner_iter)
 
-![Decomposition][_assets/decomposition.png]
+![Decomposition][/assets/decomposition.png]
 
 
 ## References
