@@ -1,3 +1,8 @@
+---
+title: How STL Works
+---
+# Using STL
+
 STL is a classic method to decompose a time series into its consittuent
 components: the Trend, the Seasonal and the Residual. STL is used because it
 is straightforward to use (only a couple of parameters need to be specified),
