@@ -1,11 +1,16 @@
 ---
 title: How STL Works
+include_scripts: [
+  "https://cdn.jsdelivr.net/npm/d3@7",
+  "/assets/js/seasonal_d3.js"
+]
 ---
 
 # Using STL
 
-STL is a classic method to decompose a time series into its consittuent
-components: the Trend, the Seasonal and the Residual. STL is used because it
+STL is a classic method to decompose a time series into its constituent
+components: the Trend, the Seasonal and the Residual. It was introduced by
+Cleveland et al. in a 1990 paper (see references below). STL is used because it
 is straightforward to use (only a couple of parameters need to be specified),
 and has enough variability to cover lots of different time series shapes.
 
@@ -92,7 +97,7 @@ subcycles = (Y
     .reset_index(drop=True)
     .groupby(lambda ix: ix % period)
 )
-smooth_subcycles = [loess_smoothing(subcycle[1], season, xtra_vals=1)
+smooth_subcycles = [loess_smoothing(subcycle[1], seasonal, xtra_vals=1)
                     for subcycle in subcycles]
 C = pd.concat(smooth_subcycles).sort_index()
 ```
@@ -100,6 +105,20 @@ C = pd.concat(smooth_subcycles).sort_index()
 After smoothing, the plot above looks like this:
 
 ![Smooth Cycle-subseries](/assets/co2-subseries-smooth.png)
+
+<div id="seasonal-d3">
+    <input type="range" id="nsubp" name="nsubp" list="values" min="0" max="6" step="1" value="0" style="width:200px; margin:0;"/>
+
+    <datalist id="values" style="display:flex; flex-direction:column; justify-content:space-between; writing-mode:vertical-lr; width:200px;">
+      <option value="0" label="0" style="padding:0; transform:rotate(-90deg);"></option>
+      <option value="1" label="5" style="padding:0; transform:rotate(-90deg);"></option>
+      <option value="2" label="11" style="padding:0; transform:rotate(-90deg);"></option>
+      <option value="3" label="17" style="padding:0; transform:rotate(-90deg);"></option>
+      <option value="4" label="23" style="padding:0; transform:rotate(-90deg);"></option>
+      <option value="5" label="29" style="padding:0; transform:rotate(-90deg);"></option>
+      <option value="6" label="35" style="padding:0; transform:rotate(-90deg);"></option>
+    </datalist>
+</div>
 
 Once each cycle-subseries has been smoothed, we combine each them again into
 a single series we'll call **C**. Like many smoothing methods, loess is less
@@ -118,7 +137,7 @@ Next, we are going to smooth the **C** series to create a new series called
 2. A second moving average of length n<sub>(p)</sub>. Two moving averages
    make sure this filter is symmetric even if n<sub>(p)</sub> is even.
 3. A moving average of length 3.
-4. A Loess smoothing with smoothing parameter n<sub>(l)</sub> (`*low_pass*`
+4. A Loess smoothing with smoothing parameter n<sub>(l)</sub> (`low_pass`
    in `statsmodels`).
 
 ```python
@@ -152,19 +171,19 @@ Finally, to calculate the Trend, we take the deseasonalised series, **Y** -
 n<sub>(t)</sub> (called `trend` in `statsmodels`). The value of
 n<sub>(t)</sub> should be set to the smallest odd integer greater than 1.5 *
 n<sub>(p)</sub> / (1 - 1.5 / n<sub>(s)</sub>). If we take n<sub>(s)</sub>=35,
-this means that n<sub>(p)</sub>=19.
+and n<sub>(p)</sub>=12, this means that n<sub>(t)</sub>=19.
 
 This completes one run through this decomposition. We can now rinse and
 repeat, using the de-trended series to begin again in step 1. We can put it
 all together like this:
 
 ```python
-def inner_loop(Y, T, season, period, low_pass, trend):
+def inner_loop(Y, T, seasonal, period, low_pass, trend):
     subcycles = ((Y-T)
         .reset_index(drop=True)
         .groupby(lambda ix: ix % period)
     )
-    C = pd.concat([loess_smoothing(subcycle[1], season, xtra_vals=1)
+    C = pd.concat([loess_smoothing(subcycle[1], seasonal, xtra_vals=1)
                    for subcycle in subcycles]
     ).sort_index()
     L = low_pass_filter(C, period, low_pass)
@@ -173,10 +192,10 @@ def inner_loop(Y, T, season, period, low_pass, trend):
     return T, S
 
 
-def stl_decomposition(Y, season, period, low_pass, trend, iter_count):
+def stl_decomposition(Y, seasonal, period, low_pass, trend, iter_count):
     T = pd.Series(0, index=Y.index)
     for _ in range(iter_count):
-        T, S = inner_loop(Y, T, season, period, low_pass, trend)
+        T, S = inner_loop(Y, T, seasonal, period, low_pass, trend)
 
     return (
         T, S, (Y-T-S).rename('resid')
@@ -186,12 +205,13 @@ def stl_decomposition(Y, season, period, low_pass, trend, iter_count):
 And if we decompose our original series, we get the following picture:
 
 ```python
-period=12
-low_pass=13
-trend=19
-inner_iter=5
+seasonal = 35
+period = 12
+low_pass = 13
+trend = 19
+inner_iter = 5
 
-T, S, R = stl_decomposition(Y, season, period, low_pass, trend, inner_iter)
+T, S, R = stl_decomposition(Y, seasonal, period, low_pass, trend, inner_iter)
 ```
 
 ![Decomposition](/assets/decomposition.png)

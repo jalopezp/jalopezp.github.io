@@ -1,0 +1,5 @@
+{% if page.include_scripts %}
+  {% for include_script in page.include_scripts %}
+    <script type='text/javascript' src='{{ include_script }}'></script>
+  {% endfor %}
+{% endif %}
