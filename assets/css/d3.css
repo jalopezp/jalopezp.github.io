@@ -1,0 +1,25 @@
+datalist {
+    display:flex;
+    flex-direction:column; 
+    justify-content:space-between; 
+    writing-mode:vertical-lr; 
+    width:200px;
+}
+
+g.tick line {
+    color:lightgray;
+    opacity:0.5;
+}
+
+g.tick text {
+    font-size:1.3em
+}
+
+option {
+    padding:0; 
+    transform:rotate(-90deg);
+}
+
+svgd3 {
+    width:80%
+}

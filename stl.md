@@ -1,4 +1,5 @@
 ---
+layout: d3post
 title: How STL Works
 include_scripts: [
   "https://cdn.jsdelivr.net/npm/d3@7",
@@ -104,20 +105,10 @@ C = pd.concat(smooth_subcycles).sort_index()
 
 After smoothing, the plot above looks like this:
 
-![Smooth Cycle-subseries](/assets/co2-subseries-smooth.png)
-
 <div id="seasonal-d3">
     <input type="range" id="nsubp" name="nsubp" list="values" min="0" max="6" step="1" value="0" style="width:200px; margin:0;"/>
 
-    <datalist id="values" style="display:flex; flex-direction:column; justify-content:space-between; writing-mode:vertical-lr; width:200px;">
-      <option value="0" label="0" style="padding:0; transform:rotate(-90deg);"></option>
-      <option value="1" label="5" style="padding:0; transform:rotate(-90deg);"></option>
-      <option value="2" label="11" style="padding:0; transform:rotate(-90deg);"></option>
-      <option value="3" label="17" style="padding:0; transform:rotate(-90deg);"></option>
-      <option value="4" label="23" style="padding:0; transform:rotate(-90deg);"></option>
-      <option value="5" label="29" style="padding:0; transform:rotate(-90deg);"></option>
-      <option value="6" label="35" style="padding:0; transform:rotate(-90deg);"></option>
-    </datalist>
+    {% include datalist.html labels="0 5 11 17 23 29 35" %}
 </div>
 
 Once each cycle-subseries has been smoothed, we combine each them again into

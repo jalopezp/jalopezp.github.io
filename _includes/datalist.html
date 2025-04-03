@@ -1,0 +1,6 @@
+<datalist id="values">
+{% assign labels_iter = include.labels | split: " " %}
+{% for label in labels_iter -%}
+  <option value="{{ forloop.index }}" label="{{ label }}"></option>
+{% endfor %}
+</datalist>
