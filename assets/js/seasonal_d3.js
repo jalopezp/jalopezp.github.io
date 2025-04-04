@@ -91,7 +91,7 @@ function add_line(svg, linedata, month_name) {
         .on("mouseenter", function(event) {
             event.target.classList.add("highlighted");
             tooltip
-                .attr("transform", `translate(${event.offsetX-75}, ${event.offsetY-20})`)
+                .attr("transform", `translate(${event.offsetX-50}, ${event.offsetY})`)
                 .attr("visibility", "visible");
         })
         .on("mouseleave", function(event) {
