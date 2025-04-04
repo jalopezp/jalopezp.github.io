@@ -1,5 +1,6 @@
-<datalist id="values">
 {% assign labels_iter = include.labels | split: " " %}
+<input type="range" id="nsubp" name="nsubp" list="values" min="0" max="{{ include.labels | number_of_words | minus:1 }}" value="0" />
+<datalist id="values">
 {% for label in labels_iter -%}
   <option value="{{ forloop.index }}" label="{{ label }}"></option>
 {% endfor %}

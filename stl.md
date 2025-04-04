@@ -106,8 +106,6 @@ C = pd.concat(smooth_subcycles).sort_index()
 After smoothing, the plot above looks like this:
 
 <div id="seasonal-d3">
-    <input type="range" id="nsubp" name="nsubp" list="values" min="0" max="6" step="1" value="0" style="width:200px; margin:0;"/>
-
     {% include datalist.html labels="0 5 11 17 23 29 35" %}
 </div>
 

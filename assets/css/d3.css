@@ -1,8 +1,14 @@
-datalist {
+datalist#values {
+    margin-left:70px;
     display:flex;
     flex-direction:column; 
     justify-content:space-between; 
     writing-mode:vertical-lr; 
+    width:200px;
+}
+
+input#nsubp {
+    margin-left:70px;
     width:200px;
 }
 
@@ -15,11 +21,34 @@ g.tick text {
     font-size:1.3em
 }
 
+svg path.plotline {
+    stroke:lightpink;
+    stroke-width:1.5;
+    stroke-opacity:0.7;
+}
+
+svg path.highlighted {
+    stroke:lightcoral;
+    stroke-width:5;
+    stroke-linecap:round;
+}
+
+svg g.tooltip {
+    z-index:3;
+}
+
+svg g rect.textbg {
+    fill:lightgray;
+    opacity:0.6;
+}
+
 option {
     padding:0; 
     transform:rotate(-90deg);
 }
 
-svgd3 {
-    width:80%
+svg.svgd3 {
+    width:640px;
+    padding-left:20px;
+    padding-right:20px;
 }
